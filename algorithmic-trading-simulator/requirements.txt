@@ -1,0 +1,23 @@
+# FastAPI application and ASGI server
+fastapi
+uvicorn[standard]
+
+# Database and migrations
+sqlalchemy>=2.0
+psycopg[binary]
+alembic
+
+# Validation and configuration
+pydantic>=2.0
+pydantic-settings
+python-dotenv
+
+# Authentication and password hashing
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+
+# External HTTP requests and testing
+httpx
+pytest
+pytest-asyncio

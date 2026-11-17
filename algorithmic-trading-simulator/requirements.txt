@@ -10,11 +10,12 @@ alembic
 # Validation and configuration
 pydantic>=2.0
 pydantic-settings
+email-validator
 python-dotenv
 
 # Authentication and password hashing
 python-jose[cryptography]
-passlib[bcrypt]
+passlib>=1.7.4
 python-multipart
 
 # External HTTP requests and testing

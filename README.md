@@ -12,7 +12,7 @@ describing its intended responsibility.
 - Pydantic v2
 - JWT authentication
 - httpx for market-data requests
-- pytest for testing
+- pytest for testing and automation
 
 ## Getting started
 

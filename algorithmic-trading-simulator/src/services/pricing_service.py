@@ -26,12 +26,13 @@ class PricingService:
     def prepare_request_params(self, symbol: str) -> dict:
         return {
             "function": "GLOBAL_QUOTE",
-            "symbol": symbol.upper(),
+            "symbol": symbol.strip().upper(),
             "apikey": self.api_key
         }
 
     # Make asynchronous API request
     async def make_request(self, params: dict) -> Optional[dict]:
+
         try:
             response = await self.client.get(
                 self.BASE_URL,
@@ -46,17 +47,34 @@ class PricingService:
             print("Market data API request timed out.")
 
         except httpx.HTTPStatusError as exc:
-            print(f"HTTP error occurred: {exc.response.status_code}")
+            print(f"HTTP error: {exc.response.status_code}")
 
         except httpx.RequestError as exc:
-            print(f"Request failed: {exc}")
+            print(f"Network error: {exc}")
 
         except ValueError:
-            print("Invalid JSON response received.")
+            print("Invalid JSON received from market API.")
 
         return None
 
-    # Retrieve the current stock price
+    # Check for API-level errors inside the JSON response
+    def check_api_error(self, data: dict) -> Optional[str]:
+
+        if not data:
+            return "Empty response received."
+
+        if "Error Message" in data:
+            return data["Error Message"]
+
+        if "Note" in data:
+            return "API rate limit exceeded. Please try again later."
+
+        if "Information" in data:
+            return data["Information"]
+
+        return None
+
+    # Retrieve current stock price
     async def get_stock_price(self, symbol: str) -> Optional[float]:
 
         if not self.validate_symbol(symbol):
@@ -74,27 +92,38 @@ class PricingService:
         if not data:
             return None
 
-        # Extract Global Quote information
+        # Detect API errors
+        api_error = self.check_api_error(data)
+
+        if api_error:
+            print(f"Market API error: {api_error}")
+            return None
+
         quote = data.get("Global Quote")
 
         if not quote:
-            print("No stock price data found.")
+            print("No quote data available for this symbol.")
             return None
 
-        # Extract the price from the API response
         price = quote.get("05. price")
 
         if not price:
-            print("Price information is missing.")
+            print("Price field is missing.")
             return None
 
         try:
-            return float(price)
+            price = float(price)
+
+            if price <= 0:
+                print("Invalid stock price received.")
+                return None
+
+            return price
 
         except (ValueError, TypeError):
-            print("Invalid price received from API.")
+            print("Unable to convert stock price.")
             return None
 
-    # Close the HTTP client
+    # Close HTTP client
     async def close(self):
         await self.client.aclose()

@@ -57,7 +57,7 @@ class PricingService:
 
         return None
 
-    # Check for API-level errors inside the JSON response
+    # Check for API errors in response
     def check_api_error(self, data: dict) -> Optional[str]:
 
         if not data:
@@ -74,7 +74,7 @@ class PricingService:
 
         return None
 
-    # Retrieve current stock price
+    # Retrieve stock price
     async def get_stock_price(self, symbol: str) -> Optional[float]:
 
         if not self.validate_symbol(symbol):
@@ -92,7 +92,6 @@ class PricingService:
         if not data:
             return None
 
-        # Detect API errors
         api_error = self.check_api_error(data)
 
         if api_error:
@@ -102,12 +101,12 @@ class PricingService:
         quote = data.get("Global Quote")
 
         if not quote:
-            print("No quote data available for this symbol.")
+            print("No quote data available.")
             return None
 
         price = quote.get("05. price")
 
-        if not price:
+        if price is None:
             print("Price field is missing.")
             return None
 
@@ -115,13 +114,12 @@ class PricingService:
             price = float(price)
 
             if price <= 0:
-                print("Invalid stock price received.")
                 return None
 
             return price
 
         except (ValueError, TypeError):
-            print("Unable to convert stock price.")
+            print("Invalid price received.")
             return None
 
     # Close HTTP client

@@ -1,4 +1,3 @@
-
 import os
 import re
 import httpx
@@ -15,28 +14,35 @@ class PricingService:
 
     # Validate stock symbol format
     def validate_symbol(self, symbol: str) -> bool:
+
         if not symbol:
             return False
 
         symbol = symbol.strip().upper()
 
-        return bool(re.fullmatch(r"[A-Z0-9.-]{1,15}", symbol))
+        return bool(
+            re.fullmatch(r"[A-Z0-9.-]{1,15}", symbol)
+        )
 
-    # Prepare API request parameters
+    # Prepare API parameters
     def prepare_request_params(self, symbol: str) -> dict:
+
         return {
             "function": "GLOBAL_QUOTE",
             "symbol": symbol.strip().upper(),
-            "apikey": self.api_key
+            "apikey": self.api_key,
         }
 
-    # Make asynchronous API request
-    async def make_request(self, params: dict) -> Optional[dict]:
+    # Perform async HTTP request
+    async def make_request(
+        self,
+        params: dict,
+    ) -> Optional[dict]:
 
         try:
             response = await self.client.get(
                 self.BASE_URL,
-                params=params
+                params=params,
             )
 
             response.raise_for_status()
@@ -44,21 +50,26 @@ class PricingService:
             return response.json()
 
         except httpx.TimeoutException:
-            print("Market data API request timed out.")
+            print("Market API request timed out.")
 
         except httpx.HTTPStatusError as exc:
-            print(f"HTTP error: {exc.response.status_code}")
+            print(
+                f"HTTP error: {exc.response.status_code}"
+            )
 
         except httpx.RequestError as exc:
             print(f"Network error: {exc}")
 
         except ValueError:
-            print("Invalid JSON received from market API.")
+            print("Invalid JSON received.")
 
         return None
 
-    # Check for API errors in response
-    def check_api_error(self, data: dict) -> Optional[str]:
+    # Detect API errors
+    def check_api_error(
+        self,
+        data: dict,
+    ) -> Optional[str]:
 
         if not data:
             return "Empty response received."
@@ -67,7 +78,7 @@ class PricingService:
             return data["Error Message"]
 
         if "Note" in data:
-            return "API rate limit exceeded. Please try again later."
+            return "API rate limit exceeded."
 
         if "Information" in data:
             return data["Information"]
@@ -75,14 +86,17 @@ class PricingService:
         return None
 
     # Retrieve stock price
-    async def get_stock_price(self, symbol: str) -> Optional[float]:
+    async def get_stock_price(
+        self,
+        symbol: str,
+    ) -> Optional[float]:
 
         if not self.validate_symbol(symbol):
             print("Invalid stock symbol.")
             return None
 
         if not self.api_key:
-            print("Alpha Vantage API key is missing.")
+            print("API key is missing.")
             return None
 
         params = self.prepare_request_params(symbol)
@@ -92,16 +106,16 @@ class PricingService:
         if not data:
             return None
 
-        api_error = self.check_api_error(data)
+        error = self.check_api_error(data)
 
-        if api_error:
-            print(f"Market API error: {api_error}")
+        if error:
+            print(f"Market API error: {error}")
             return None
 
         quote = data.get("Global Quote")
 
         if not quote:
-            print("No quote data available.")
+            print("Quote data not found.")
             return None
 
         price = quote.get("05. price")

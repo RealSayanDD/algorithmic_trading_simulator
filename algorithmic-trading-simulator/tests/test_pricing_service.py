@@ -25,7 +25,7 @@ def test_check_api_error_cases() -> None:
     service = PricingService()
     assert service.check_api_error({}) == "Empty response received."
     assert service.check_api_error({"Error Message": "Invalid API call."}) == "Invalid API call."
-    assert service.check_api_error({"Note": "Limit reached"}) == "API rate limit exceeded. Please try again later."
+    assert service.check_api_error({"Note": "Limit reached"}) == "API rate limit exceeded."
     assert service.check_api_error({"Information": "Premium endpoint"}) == "Premium endpoint"
     assert service.check_api_error({"Global Quote": {"05. price": "150.00"}}) is None
 
